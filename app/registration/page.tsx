@@ -177,8 +177,8 @@ function RegistrationForm() {
   };
 
   return (
-    <section className="w-full min-h-screen flex items-center justify-center p-4 bg-gray-50 pb-20">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-[500px] bg-white rounded-[40px] shadow-2xl border border-gray-100 overflow-hidden">
+    <section className="w-full min-h-screen flex items-center justify-center p-4 bg-app-bg pb-20 transition-colors duration-300">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-[500px] bg-app-card rounded-[40px] shadow-2xl border border-app-border overflow-hidden">
         <div className="bg-primary p-8 text-center text-white leading-none">
           <h2 className="text-3xl font-black italic tracking-tighter uppercase leading-none">Nexo Global</h2>
           <p className="opacity-80 text-[10px] mt-2 font-bold uppercase tracking-widest">Network Registration</p>
@@ -199,8 +199,8 @@ function RegistrationForm() {
               isValid={sponsorValid} 
             />
             <div className="flex flex-col">
-              <label className="text-[10px] font-bold text-gray-400 ml-1 mb-1 uppercase tracking-wider">Placement</label>
-              <select className="w-full p-3.5 bg-gray-50 border border-gray-100 rounded-2xl outline-none text-sm font-bold focus:ring-2 focus:ring-primary" value={formData.placement} onChange={(e) => setFormData({...formData, placement: e.target.value})}>
+              <label className="text-[10px] font-bold text-app-dim ml-1 mb-1 uppercase tracking-wider">Placement</label>
+              <select className="w-full p-3.5 bg-app-bg border border-app-border rounded-2xl outline-none text-sm font-bold focus:ring-2 focus:ring-primary text-app-text" value={formData.placement} onChange={(e) => setFormData({...formData, placement: e.target.value})}>
                 <option value="left">Left Side</option>
                 <option value="right">Right Side</option>
               </select>
@@ -248,27 +248,27 @@ function RegistrationForm() {
         {showSuccessModal && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white w-full max-w-sm rounded-[40px] p-8 relative z-10 shadow-2xl text-center">
-              <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-app-card w-full max-w-sm rounded-[40px] p-8 relative z-10 shadow-2xl text-center border border-app-border">
+              <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <ShieldCheck size={40} />
               </div>
-              <h3 className="text-2xl font-black italic text-gray-900 uppercase tracking-tighter mb-2">Registration Done</h3>
-              <p className="text-xs text-gray-500 font-bold mb-6">User successfully registered.</p>
-              <div className="bg-gray-50 rounded-3xl p-5 border border-gray-100 text-left space-y-3 mb-6">
+              <h3 className="text-2xl font-black italic text-app-text uppercase tracking-tighter mb-2">Registration Done</h3>
+              <p className="text-xs text-app-dim font-bold mb-6">User successfully registered.</p>
+              <div className="bg-app-bg rounded-3xl p-5 border border-app-border text-left space-y-3 mb-6">
                 <div>
-                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Login Email</p>
-                  <p className="text-sm font-bold text-gray-800">{formData.email}</p>
+                  <p className="text-[9px] font-black text-app-dim uppercase tracking-widest">Login Email</p>
+                  <p className="text-sm font-bold text-app-text">{formData.email}</p>
                 </div>
                 <div>
-                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Login Password</p>
-                  <p className="text-sm font-bold text-gray-800">{formData.password}</p>
+                  <p className="text-[9px] font-black text-app-dim uppercase tracking-widest">Login Password</p>
+                  <p className="text-sm font-bold text-app-text">{formData.password}</p>
                 </div>
               </div>
               <div className="flex flex-col gap-3">
-                <button onClick={copyCredentials} className={`w-full py-4 rounded-2xl font-black text-xs uppercase flex items-center justify-center gap-2 transition-all ${copied ? 'bg-emerald-500 text-white' : 'bg-gray-900 text-white shadow-lg'}`}>
+                <button onClick={copyCredentials} className={`w-full py-4 rounded-2xl font-black text-xs uppercase flex items-center justify-center gap-2 transition-all ${copied ? 'bg-emerald-500 text-white' : 'bg-primary text-white shadow-lg shadow-primary/20'}`}>
                   {copied ? <><Check size={18} /> Details Copied</> : <><Copy size={18} /> Copy & Send Details</>}
                 </button>
-                <button onClick={() => router.push('/pins')} className="w-full py-4 rounded-2xl font-black text-xs uppercase text-gray-400 hover:text-gray-900">
+                <button onClick={() => router.push('/pins')} className="w-full py-4 rounded-2xl font-black text-xs uppercase text-app-dim hover:text-app-text">
                   Close and Go Back
                 </button>
               </div>
@@ -289,16 +289,16 @@ export default function Registration() {
 }
 
 function InputField({ label, type, placeholder, value, onChange, onBlur, isValid, icon, disabled, suffix }: InputFieldProps) {
-  let borderColor = "border-gray-100";
-  if (isValid === true) borderColor = "border-green-500 bg-green-50";
-  if (isValid === false) borderColor = "border-red-500 bg-red-50";
+  let borderColor = "border-app-border";
+  if (isValid === true) borderColor = "border-green-500 bg-green-500/5";
+  if (isValid === false) borderColor = "border-red-500 bg-red-500/5";
   return (
-    <div className="flex flex-col relative">
-      <label className="text-[10px] font-bold text-gray-400 ml-2 mb-1 uppercase tracking-wider">{label}</label>
+    <div className="flex flex-col relative space-y-1.5">
+      <label className="text-[10px] font-bold text-app-dim ml-2 uppercase tracking-wider">{label}</label>
       <div className="relative flex items-center">
-        {icon && <div className="absolute left-4 text-gray-300">{icon}</div>}
-        <input disabled={disabled} type={type} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} onBlur={onBlur} className={`w-full ${icon ? 'pl-11' : 'px-4'} ${suffix ? 'pr-12' : 'pr-4'} py-3.5 border rounded-2xl outline-none transition-all text-sm font-medium focus:ring-2 focus:ring-primary ${borderColor} bg-gray-50`} required />
-        {suffix && <div className="absolute right-4">{suffix}</div>}
+        {icon && <div className="absolute left-4 text-app-dim/50">{icon}</div>}
+        <input disabled={disabled} type={type} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} onBlur={onBlur} className={`w-full ${icon ? 'pl-11' : 'px-4'} ${suffix ? 'pr-12' : 'pr-4'} py-3.5 border rounded-2xl outline-none transition-all text-sm font-medium focus:ring-2 focus:ring-primary ${borderColor} bg-app-bg text-app-text placeholder:text-app-dim/30`} required />
+        {suffix && <div className="absolute right-4 text-app-dim">{suffix}</div>}
       </div>
     </div>
   );
