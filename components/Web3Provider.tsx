@@ -37,7 +37,7 @@ const Web3Provider = ({ children }: { children: ReactNode }) => {
           theme="auto" 
           mode="dark"
           options={{
-             setShowBalance: true,
+             showBalance: true,
              initialChainId: bsc.id
           }}
         >
