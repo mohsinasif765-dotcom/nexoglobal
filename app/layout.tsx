@@ -15,11 +15,19 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Nexo Global",
   description: "Next-Generation Global Networking & Wealth Building",
-  // Icons ka section yahan add karein
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Nexo Global",
+  },
+  formatDetection: {
+    telephone: false,
+  },
   icons: {
-    icon: "/user-logo.png", // Agar file ka naam logo.png hai to wo likhein
-    shortcut: "/user-logo.png",
-    apple: "/user-logo.png",
+    icon: "/icon-192x192.png",
+    shortcut: "/icon-192x192.png",
+    apple: "/icon-192x192.png",
   },
 };
 

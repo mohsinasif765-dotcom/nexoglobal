@@ -140,7 +140,7 @@ export default function WalletPage() {
 
       if (![bsc.id, polygon.id].includes(chainId)) {
          alert("Please switch to BNB Chain or Polygon");
-         return switchChain({ chainId: bsc.id as any });
+         return (switchChain as any)({ chainId: bsc.id });
       }
 
       const amountVal = parseFloat(depositAmount);
