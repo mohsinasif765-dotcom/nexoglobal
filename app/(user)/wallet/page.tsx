@@ -138,7 +138,7 @@ export default function WalletPage() {
          return setWalletModalOpen(true);
       }
 
-      if (![bsc.id, polygon.id].includes(chainId)) {
+      if (!( [bsc.id, polygon.id] as number[]).includes(chainId)) {
          alert("Please switch to BNB Chain or Polygon");
          return (switchChain as any)({ chainId: bsc.id });
       }
@@ -148,8 +148,8 @@ export default function WalletPage() {
          return alert(`Minimum deposit is $${settings.min_deposit || "2"}`);
       }
 
-      const usdtAddress = USDT_ADDRESSES[chainId as keyof typeof USDT_ADDRESSES];
-      const decimals = USDT_DECIMALS[chainId as keyof typeof USDT_DECIMALS];
+      const usdtAddress = USDT_ADDRESSES[chainId as 56 | 137];
+      const decimals = USDT_DECIMALS[chainId as 56 | 137];
 
       try {
          writeContract({
