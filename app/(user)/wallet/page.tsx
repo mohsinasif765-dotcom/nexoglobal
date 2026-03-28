@@ -9,6 +9,7 @@ import {
    ArrowLeft, MoreVertical, DollarSign, Plus
 } from "lucide-react";
 import { createBrowserClient } from "@supabase/ssr";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
    useAccount, useWriteContract, useWaitForTransactionReceipt,
@@ -42,6 +43,7 @@ const USDT_DECIMALS: Record<number, number> = {
 };
 
 export default function WalletPage() {
+   const router = useRouter();
    const [user, setUser] = useState<any>(null);
    const [stats, setStats] = useState<any>(null);
    const [loading, setLoading] = useState(true);
@@ -366,7 +368,7 @@ export default function WalletPage() {
 
                <motion.button
                   whileTap={{ scale: 0.96 }}
-                  onClick={() => setModal('buy-pin')}
+                  onClick={() => router.push('/pins')}
                   className="bg-slate-900 dark:bg-primary text-white p-4 rounded-[24px] flex flex-col items-center justify-center gap-2 shadow-lg active:opacity-90 transition-all border border-white/5 shadow-primary/10"
                >
                   <div className="w-8 h-8 bg-primary/20 rounded-xl flex items-center justify-center text-primary">
