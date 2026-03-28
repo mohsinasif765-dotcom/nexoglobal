@@ -23,6 +23,7 @@ export default function Navbar() {
 
   const navLinks = [
     { name: "Home", href: "/" },
+    { name: "Rules", href: "/rules" },
     { name: "Pricing", href: "#pricing" },
     { name: "Global Tree", href: "/tree" },
     { name: "Wallet", href: "/wallet" },

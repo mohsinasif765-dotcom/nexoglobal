@@ -92,9 +92,12 @@ export default function Footer() {
           <div className="space-y-6">
             <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Explore</h4>
             <ul className="space-y-4">
-              {["Home", "Pricing", "Product", "About Us"].map((item) => (
+              {["Home", "Rules", "Pricing", "Product", "About Us"].map((item) => (
                 <li key={item}>
-                  <Link href={`#${item.toLowerCase().replace(' ', '')}`} className="text-sm font-bold text-app-dim hover:text-primary transition-colors italic uppercase tracking-wider">
+                  <Link 
+                    href={item === "Rules" ? "/rules" : `#${item.toLowerCase().replace(' ', '')}`} 
+                    className="text-sm font-bold text-app-dim hover:text-primary transition-colors italic uppercase tracking-wider"
+                  >
                     {item}
                   </Link>
                 </li>

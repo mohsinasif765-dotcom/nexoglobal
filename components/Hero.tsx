@@ -42,11 +42,11 @@ export default function Hero() {
               
               <div className="relative rounded-[48px] overflow-hidden bg-app-bg">
                 <img 
-                  src="/hero-vip.png" 
+                  src="/images/binary-tree-guide.png" 
                   alt="Nexo Global VIP Networking" 
                   className="w-full max-w-[650px] h-auto object-cover hover:scale-110 transition-transform duration-1000 ease-in-out"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-40" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-10" />
               </div>
 
               {/* VIP Floating Badge */}
