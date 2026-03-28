@@ -266,10 +266,10 @@ export default function WalletPage() {
             p_acc_title: 'USDT Wallet'
          });
 
-         if (error) throw error;
-         if (!data.success) throw new Error(data.message);
+         const fee = amountVal * 0.1;
+         const net = amountVal - fee;
 
-         alert("Withdrawal request submitted! Your balance has been deducted and the request will be reviewed within 24 hours. ✨");
+         alert(`Payout Request for $${net.toFixed(2)} (after $${fee.toFixed(2)} fee) submitted successfully! ✨\nOur team will review and process your request within 24 hours.`);
          setModal(null);
          fetchData();
       } catch (e: any) {
@@ -376,6 +376,33 @@ export default function WalletPage() {
                   </div>
                   <span className="text-[8px] font-black uppercase tracking-widest italic">E-PIN</span>
                </motion.button>
+            </div>            {/* Wallet Instructions */}
+            <div className="bg-bg-card p-6 rounded-[35px] border border-app space-y-4">
+               <div className="flex items-center gap-2 mb-1">
+                  <div className="bg-primary p-1 rounded-lg text-white"><Zap size={14} /></div>
+                  <h4 className="text-[10px] font-black italic text-text-app uppercase tracking-widest leading-none">Wallet Protocol</h4>
+               </div>
+
+               <div className="space-y-4">
+                  <div className="flex gap-4">
+                     <div className="w-5 h-5 bg-bg-app shadow-sm text-primary rounded-lg flex items-center justify-center text-[10px] font-black shrink-0 border border-app">01</div>
+                     <p className="text-[8px] font-bold text-text-dim uppercase tracking-tight leading-relaxed italic">
+                        <span className="text-text-app">Deposit</span>: Automated OxApay ya Manual Web3 transfer istemal karein.
+                     </p>
+                  </div>
+                  <div className="flex gap-4">
+                     <div className="w-5 h-5 bg-bg-app shadow-sm text-primary rounded-lg flex items-center justify-center text-[10px] font-black shrink-0 border border-app">02</div>
+                     <p className="text-[8px] font-bold text-text-dim uppercase tracking-tight leading-relaxed italic">
+                        <span className="text-text-app">Withdraw</span>: BEP20 address dein. Har withdrawal par <span className="text-rose-500">10% service fee</span> apply hogi.
+                     </p>
+                  </div>
+                  <div className="flex gap-4">
+                     <div className="w-5 h-5 bg-bg-app shadow-sm text-primary rounded-lg flex items-center justify-center text-[10px] font-black shrink-0 border border-app">03</div>
+                     <p className="text-[8px] font-bold text-text-dim uppercase tracking-tight leading-relaxed italic">
+                        <span className="text-text-app">Activation</span>: Apnay wallet balance se direct <span className="text-primary">PIN purchase</span> karein.
+                     </p>
+                  </div>
+               </div>
             </div>
 
             {/* Clean Activity Log */}
@@ -411,7 +438,7 @@ export default function WalletPage() {
                            </div>
                            <p className={`font-black italic text-[11px] ${tx.type === 'deposit' ? 'text-emerald-500' : 'text-text-app'
                               }`}>
-                              {tx.type === 'deposit' ? '+' : '-'}${tx.amount}
+                               {tx.type === 'deposit' ? '+' : '-'}${tx.amount}
                            </p>
                         </motion.div>
                      ))
@@ -430,36 +457,6 @@ export default function WalletPage() {
                   Encrypted Ledger Verification Active
                </p>
             </div>
-
-            {/* Wallet Instructions */}
-            <div className="bg-bg-card p-6 rounded-[35px] border border-app space-y-4">
-               <div className="flex items-center gap-2 mb-1">
-                  <div className="bg-primary p-1 rounded-lg text-white"><Zap size={14} /></div>
-                  <h4 className="text-[10px] font-black italic text-text-app uppercase tracking-widest leading-none">Wallet Protocol</h4>
-               </div>
-
-               <div className="space-y-4">
-                  <div className="flex gap-4">
-                     <div className="w-5 h-5 bg-bg-app shadow-sm text-primary rounded-lg flex items-center justify-center text-[10px] font-black shrink-0 border border-app">01</div>
-                     <p className="text-[8px] font-bold text-text-dim uppercase tracking-tight leading-relaxed italic">
-                        <span className="text-text-app">Deposit</span>: Automated OxApay ya Manual Web3 transfer istemal karein.
-                     </p>
-                  </div>
-                  <div className="flex gap-4">
-                     <div className="w-5 h-5 bg-bg-app shadow-sm text-primary rounded-lg flex items-center justify-center text-[10px] font-black shrink-0 border border-app">02</div>
-                     <p className="text-[8px] font-bold text-text-dim uppercase tracking-tight leading-relaxed italic">
-                        <span className="text-text-app">Withdraw</span>: BEP20 address dein. Approval ka waqt <span className="text-primary">24 hours</span> hai.
-                     </p>
-                  </div>
-                  <div className="flex gap-4">
-                     <div className="w-5 h-5 bg-bg-app shadow-sm text-primary rounded-lg flex items-center justify-center text-[10px] font-black shrink-0 border border-app">03</div>
-                     <p className="text-[8px] font-bold text-text-dim uppercase tracking-tight leading-relaxed italic">
-                        <span className="text-text-app">Activation</span>: Apnay wallet balance se direct <span className="text-primary">PIN purchase</span> karein.
-                     </p>
-                  </div>
-               </div>
-            </div>
-
          </div>
 
          {/* Native Compact Bottom Sheets */}
@@ -538,28 +535,48 @@ export default function WalletPage() {
                      <div className="w-10 h-1 bg-gray-200 dark:bg-white/10 rounded-full mx-auto mb-6" />
                      <h2 className="text-xl font-black italic uppercase tracking-tighter text-text-app mb-6 text-center italic">QUICK <span className="text-rose-500">PAYOUT</span></h2>
 
-                     <div className="space-y-5">
-                        <div className="space-y-1.5 px-2">
-                           <label className="text-[8px] font-black text-text-dim uppercase tracking-[0.2em] italic">Cashout Amount (Min ${settings.min_withdraw || "10"})</label>
+                     <div className="space-y-4">
+                        <div className="space-y-2">
+                           <label className="text-[8px] font-black text-text-dim uppercase tracking-[0.2em] italic ml-2">Withdrawal Amount ($)</label>
                            <input
-                              type="number" placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)}
-                              className="w-full p-5 bg-bg-app border border-app rounded-2xl outline-none font-black text-2xl italic tracking-tighter text-center text-text-app focus:bg-bg-card focus:border-rose-500 transition-all"
+                              type="number" placeholder="Min. $10" value={amount} onChange={(e) => setAmount(e.target.value)}
+                              className="w-full px-5 py-4 bg-bg-app border border-app rounded-2xl outline-none font-black text-lg tracking-tighter text-text-app focus:bg-bg-card focus:border-rose-500 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                            />
                         </div>
-                        <div className="space-y-1.5 px-2">
-                           <label className="text-[8px] font-black text-text-dim uppercase tracking-[0.2em] italic">USDT Address (BEP20)</label>
+
+                        {/* Payout Summary Calculation */}
+                        {parseFloat(amount) >= 10 && (
+                           <motion.div 
+                             initial={{ opacity: 0, scale: 0.95 }}
+                             animate={{ opacity: 1, scale: 1 }}
+                             className="p-5 bg-rose-500/5 border border-rose-500/10 rounded-2xl space-y-3"
+                           >
+                              <div className="flex justify-between items-center text-[10px] font-bold text-text-dim uppercase tracking-wider">
+                                 <span>Service Fee (10%)</span>
+                                 <span className="text-rose-500">-${(parseFloat(amount) * 0.1).toFixed(2)}</span>
+                              </div>
+                              <div className="h-[1px] bg-rose-500/10" />
+                              <div className="flex justify-between items-center text-[11px] font-black text-text-app uppercase tracking-tighter">
+                                 <span className="italic">Net Payout to Wallet</span>
+                                 <span className="text-xl text-emerald-500">${(parseFloat(amount) * 0.9).toFixed(2)}</span>
+                              </div>
+                           </motion.div>
+                        )}
+                        
+                        <div className="space-y-2 pt-2">
+                           <label className="text-[8px] font-black text-text-dim uppercase tracking-[0.2em] italic ml-2">USDT Address (BEP20)</label>
                            <input
                               type="text" placeholder="0x..." value={withdrawAddress} onChange={(e) => setWithdrawAddress(e.target.value)}
-                              className="w-full px-5 py-4 bg-bg-app border border-app rounded-2xl outline-none font-mono text-[9px] tracking-widest text-text-app focus:bg-bg-card focus:border-rose-500 transition-all"
+                              className="w-full px-5 py-4 bg-bg-app border border-app rounded-2xl outline-none font-mono text-[9px] tracking-widest text-text-app focus:bg-bg-card focus:border-rose-500 transition-all font-bold"
                            />
                         </div>
-                        <button
-                           onClick={handleWithdraw}
-                           className="w-full bg-rose-500 text-white py-6 rounded-[24px] font-black text-[10px] uppercase tracking-widest italic shadow-xl shadow-rose-500/20 active:scale-95 transition-all mt-2"
-                        >
-                           Submit Payout Request
-                        </button>
                      </div>
+                     <button
+                        onClick={handleWithdraw}
+                        className="w-full bg-rose-500 text-white py-6 rounded-[24px] font-black text-[10px] uppercase tracking-widest italic shadow-xl shadow-rose-500/20 active:scale-95 transition-all mt-4"
+                     >
+                        Confirm Payout Request
+                     </button>
                   </motion.div>
                </>
             )}
