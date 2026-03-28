@@ -2,27 +2,13 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { 
-  Youtube, 
+  Instagram, 
   Facebook, 
   Mail, 
   LogIn, 
   ArrowUp,
-  ShieldCheck,
-  Video // TikTok ke liye alternative icon ya MessageCircle use kar saktay hain
+  ShieldCheck
 } from "lucide-react";
-
-// TikTok icon Lucide mein nahi hota, is liye hum ek custom SVG ya Simple Icon use karein ge
-const TikTokIcon = ({ size = 20 }: { size?: number }) => (
-  <svg 
-    width={size} 
-    height={size} 
-    viewBox="0 0 24 24" 
-    fill="currentColor" 
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-1.13-.32-2.34-.14-3.32.44-.73.41-1.32 1.09-1.55 1.9-.22.65-.21 1.36-.02 2.03.2 1.01.87 1.88 1.75 2.41.6.38 1.3.57 2 .58 1.45.03 2.81-.82 3.44-2.12.23-.44.35-.93.38-1.42.02-3.52.02-7.04.02-10.56z"/>
-  </svg>
-);
 
 export default function Footer() {
   const scrollToTop = () => {
@@ -64,19 +50,14 @@ export default function Footer() {
             <div className="flex gap-3 pt-2">
               {[
                 { 
-                  icon: <Youtube size={20} />, 
-                  color: "hover:bg-red-600 hover:text-white", 
-                  link: "#" 
-                },
-                { 
-                  icon: <TikTokIcon size={20} />, 
-                  color: "hover:bg-primary hover:text-white", 
-                  link: "#" 
-                },
-                { 
                   icon: <Facebook size={20} />, 
                   color: "hover:bg-blue-600 hover:text-white", 
-                  link: "#"
+                  link: "https://www.facebook.com/profile.php?id=61577529280929"
+                },
+                { 
+                  icon: <Instagram size={20} />, 
+                  color: "hover:bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600 hover:text-white", 
+                  link: "https://www.instagram.com/nexoglobal2026/" 
                 }
               ].map((social, i) => (
                 <a 
