@@ -439,7 +439,13 @@ DECLARE
     v_left_at_depth integer;
     v_right_at_depth integer;
     v_reward_per_level numeric;
+    v_reward_percent numeric;
+    v_tier_price numeric;
     v_comm_amount numeric;
+    v_is_blocked boolean;
+    v_final_user_id uuid;
+    v_admin_id uuid;
+    v_parent_ref text;
 BEGIN
     v_parent_id := NEW.parent_id;
     v_original_placement := NEW.placement;
@@ -485,14 +491,27 @@ BEGIN
                 v_comm_amount := v_reward_percent; -- Fixed $ amount
                 
                 IF v_comm_amount > 0 THEN
+                    -- Check if parent is blocked
+                    SELECT (status = 'blocked'), referral_code INTO v_is_blocked, v_parent_ref 
+                    FROM public.profiles WHERE id = v_parent_id;
+
+                    IF v_is_blocked THEN
+                        -- Redirect to Admin
+                        SELECT id INTO v_admin_id FROM public.profiles WHERE role = 'admin' LIMIT 1;
+                        v_final_user_id := v_admin_id;
+                    ELSE
+                        v_final_user_id := v_parent_id;
+                    END IF;
+
                     INSERT INTO public.commissions (id, user_id, amount, type, description, status)
                     VALUES (
                         (extract(epoch from now()) * 1000)::bigint + floor(random() * 1000)::int, 
-                        v_parent_id, v_comm_amount, 'binary_reward', 
-                        'Binary match reward for Level ' || v_depth || ' in ' || v_package_tier || ' tier.', 'approved'
+                        v_final_user_id, v_comm_amount, 'binary_reward', 
+                        CASE WHEN v_is_blocked THEN 'Redirected Commission from Blocked User ' || v_parent_ref ELSE 'Binary match reward for Level ' || v_depth || ' in ' || v_package_tier || ' tier.' END, 
+                        'approved'
                     );
                     
-                    UPDATE public.profiles SET wallet_balance = wallet_balance + v_comm_amount, total_earned = total_earned + v_comm_amount WHERE id = v_parent_id;
+                    UPDATE public.profiles SET wallet_balance = wallet_balance + v_comm_amount, total_earned = total_earned + v_comm_amount WHERE id = v_final_user_id;
                 END IF;
                 
                 -- Record THIS specific level completion

@@ -17,7 +17,8 @@ import {
   Ticket,
   Layers,
   MessageCircle,
-  Lock
+  Lock,
+  User
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr"; 
@@ -123,8 +124,7 @@ export default function Dashboard() {
         <div className="flex items-center gap-3">
           <ThemeToggle />
           <div className="w-[1px] h-6 bg-app mx-1 hidden sm:block" />
-          <button onClick={() => router.push("/settings/change-password")} className="p-2.5 bg-bg-card rounded-xl text-text-dim border border-app hover:text-primary transition-all active:scale-90 shadow-sm"><Key size={18} /></button>
-          <button onClick={handleLogout} className="p-2.5 bg-bg-card rounded-xl text-text-dim border border-app hover:text-rose-500 transition-all active:scale-90 shadow-sm"><LogOut size={18} /></button>
+          <button onClick={() => router.push("/profile")} className="p-2.5 bg-bg-card rounded-xl text-text-dim border border-app hover:text-primary transition-all active:scale-90 shadow-sm"><User size={20} /></button>
         </div>
       </header>
 
