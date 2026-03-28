@@ -15,7 +15,9 @@ import {
   Key,
   ShieldCheck,
   Ticket,
-  Layers
+  Layers,
+  MessageCircle,
+  Lock
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr"; 
@@ -184,12 +186,34 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <StatCard title="Left Team" value={currentTree.left_count} icon={<Target size={16}/>} color="bg-bg-card text-primary border-primary/20" />
-          <StatCard title="Right Team" value={currentTree.right_count} icon={<Target size={16}/>} color="bg-bg-card text-primary border-primary/20" />
-          <StatCard title="Matched Pairs" value={currentTree.total_pairs_matched} icon={<Zap size={16}/>} color="bg-bg-card text-primary border-primary/20" />
-          <StatCard title="Tier Status" value={userData.treeStats.some((t: any) => t.package_tier === selectedTier) ? "Active" : "Locked"} icon={<ShieldCheck size={16}/>} color="bg-bg-card text-primary border-primary/20" />
-        </div>
+        {userData.treeStats.some((t: any) => t.package_tier === selectedTier) ? (
+          <div className="grid grid-cols-2 gap-4">
+            <StatCard title="Left Team" value={currentTree.left_count} icon={<Target size={16}/>} color="bg-bg-card text-primary border-primary/20" />
+            <StatCard title="Right Team" value={currentTree.right_count} icon={<Target size={16}/>} color="bg-bg-card text-primary border-primary/20" />
+            <StatCard title="Matched Pairs" value={currentTree.total_pairs_matched} icon={<Zap size={16}/>} color="bg-bg-card text-primary border-primary/20" />
+            <StatCard title="Tier Status" value="Active" icon={<ShieldCheck size={16}/>} color="bg-bg-card text-primary border-primary/20" />
+          </div>
+        ) : (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-bg-card border-2 border-dashed border-app p-8 rounded-[40px] text-center space-y-4"
+          >
+            <div className="w-16 h-16 bg-app-bg rounded-full flex items-center justify-center mx-auto text-text-dim border border-app">
+              <Lock size={28} />
+            </div>
+            <div>
+              <h3 className="text-lg font-black text-text-app italic uppercase tracking-tighter">Tier Locked</h3>
+              <p className="text-[10px] text-text-dim font-bold uppercase tracking-widest mt-1">You are not yet a participant in the {selectedTier} protocol</p>
+            </div>
+            <button 
+              onClick={() => window.open('https://t.me/nexoglobal_support')}
+              className="w-full py-4 bg-primary text-white rounded-2xl font-black text-[10px] uppercase italic tracking-widest shadow-xl shadow-primary/20 flex items-center justify-center gap-2 transition-all active:scale-95"
+            >
+              <MessageCircle size={16} /> Contact Admin to Upgrade
+            </button>
+          </motion.div>
+        )}
 
         <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-bg-card p-6 rounded-[35px] border border-app shadow-sm">
           <div className="flex justify-between items-center mb-4">

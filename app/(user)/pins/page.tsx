@@ -56,7 +56,13 @@ export default function PinManagement() {
         setBalance(profile.wallet_balance || 0);
         setUserRole(profile.role || "user");
       }
-      if (treeData) setActiveTiers(treeData.map(t => t.package_tier));
+      if (treeData) {
+        const owned = treeData.map(t => t.package_tier);
+        setActiveTiers(owned);
+        if (owned.length > 0) {
+          setSelectedTier(owned[0]);
+        }
+      }
       if (pins) setMyPins(pins);
       if (historyData) setHistory(historyData);
       
@@ -104,8 +110,8 @@ export default function PinManagement() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleUsePin = (pinCode: string) => {
-    router.push(`/registration?ref=${referralCode}&pin=${pinCode}`);
+  const handleUsePin = (tier: string) => {
+    router.push(`/levels?tier=${tier}`);
   };
 
   if (loading) return (
@@ -222,8 +228,8 @@ export default function PinManagement() {
                             {pin.pin_code}
                          </div>
                          <button 
-                            onClick={() => handleUsePin(pin.pin_code)}
-                            className="bg-primary text-white p-3.5 rounded-2xl shadow-lg shadow-primary/20 active:scale-90 transition-all border border-primary"
+                            onClick={() => handleUsePin(pin.package_tier)}
+                            className="bg-primary text-white p-3.5 rounded-2xl shadow-lg shadow-primary/20 active:scale-95 transition-all border border-primary"
                          >
                             <ArrowRight size={20} />
                          </button>
@@ -291,7 +297,8 @@ export default function PinManagement() {
                      return (
                         <button 
                            key={t} onClick={() => !isLocked && setSelectedTier(t)}
-                           className={`p-5 rounded-3xl border-2 flex flex-col items-center gap-1 transition-all relative overflow-hidden active:scale-95 ${selectedTier === t ? 'border-primary bg-primary/5 text-primary' : 'border-app bg-bg-app text-text-dim'} ${isLocked ? 'opacity-40 grayscale pointer-events-none' : ''}`}
+                           className={`p-5 rounded-3xl border-2 flex flex-col items-center gap-1 transition-all relative overflow-hidden active:scale-95 ${selectedTier === t ? 'border-primary bg-primary/5 text-primary' : 'border-app bg-bg-app text-text-dim'} ${isLocked ? 'opacity-40 grayscale' : 'hover:border-primary/50'}`}
+                           disabled={isLocked}
                         >
                            {isLocked && <Lock size={12} className="absolute top-2 right-2 opacity-50" />}
                            <span className="font-black italic uppercase text-[8px] tracking-widest leading-none">{t}</span>

@@ -3,18 +3,22 @@ import { useState, useEffect } from "react";
 import { 
   Trophy, Star, Lock, ChevronRight, Zap, TrendingUp, 
   Layers, Wallet, ArrowLeft, Loader2, CheckCircle2,
-  Users, MapPin
+  Users, MapPin, MessageCircle
 } from "lucide-react";
 import { createBrowserClient } from "@supabase/ssr";
-import { useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { Suspense } from "react";
 import Link from "next/link";
 
-export default function LevelsPage() {
+function LevelsContent() {
   const router = useRouter();
-  const [activeTier, setActiveTier] = useState('starter');
+  const searchParams = useSearchParams();
+  const [activeTier, setActiveTier] = useState(searchParams.get('tier') || 'starter');
   const [loading, setLoading] = useState(true);
   const [levels, setLevels] = useState<any[]>([]);
+  const [ownedTiers, setOwnedTiers] = useState<string[]>([]);
+  const [isTierOwned, setIsTierOwned] = useState(true);
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -31,12 +35,44 @@ export default function LevelsPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // 1. Fetch Dashboard Stats to check Ownership
+      const { data: stats } = await supabase.rpc('get_user_dashboard_stats', {
+        p_user_id: user.id
+      });
+
+      if (stats && stats.tree_stats) {
+        const owned = stats.tree_stats.map((t: any) => t.package_tier);
+        setOwnedTiers(owned);
+        
+        if (!owned.includes(activeTier)) {
+          setIsTierOwned(false);
+          setLoading(false);
+          return;
+        }
+      }
+      
+      setIsTierOwned(true);
+
+      // 2. Fetch Level detail if owned
       const { data, error } = await supabase.rpc('get_user_level_stats', { 
         p_user_id: user.id,
         p_tier: activeTier
       });
       if (error) throw error;
-      setLevels(data || []);
+      
+      // Inject Level 1 if everything is empty
+      if (!data || data.length === 0) {
+        setLevels([{
+          level: 1,
+          required: 2,
+          reward: 5,
+          current_left: 0,
+          current_right: 0,
+          is_completed: false
+        }]);
+      } else {
+        setLevels(data);
+      }
     } catch (e) {
       console.error("Fetch Levels Error:", e);
     } finally {
@@ -118,11 +154,59 @@ export default function LevelsPage() {
           <Loader2 className="animate-spin text-primary" size={24} />
           <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest italic">Loading Path...</p>
         </div>
+      ) : !isTierOwned ? (
+        <div className="px-5 mt-10">
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-bg-card border-2 border-dashed border-app p-10 rounded-[40px] text-center space-y-5 shadow-sm"
+          >
+            <div className="w-20 h-20 bg-bg-app rounded-full flex items-center justify-center mx-auto text-text-dim border border-app shadow-inner">
+              <Lock size={32} />
+            </div>
+            <div>
+              <h3 className="text-xl font-black text-text-app italic uppercase tracking-tighter">Protocol Locked</h3>
+              <p className="text-[10px] text-text-dim font-bold uppercase tracking-widest mt-1 max-w-[200px] mx-auto leading-relaxed">You must be a member of the {activeTier} tier to track your level milestones.</p>
+            </div>
+            <button 
+              onClick={() => window.open('https://t.me/nexoglobal_support')}
+              className="w-full py-4 bg-primary text-white rounded-2xl font-black text-[10px] uppercase italic tracking-widest shadow-xl shadow-primary/20 flex items-center justify-center gap-2 transition-all active:scale-95"
+            >
+              <MessageCircle size={16} /> Contact Admin to Upgrade
+            </button>
+          </motion.div>
+        </div>
       ) : (
         <div className="px-5 mt-6">
-           <div className="relative space-y-4">
+            <div className="relative space-y-4">
               {/* Thinner vertical line */}
               <div className="absolute left-5 top-4 bottom-4 w-0.5 bg-app -z-10 opacity-50" />
+
+              {/* Enhanced Onboarding Card for Beginners */}
+              {levels.length > 0 && levels[0].level === 1 && levels[0].current_left === 0 && levels[0].current_right === 0 && (
+                <motion.div 
+                   initial={{ opacity: 0, scale: 0.9 }}
+                   animate={{ opacity: 1, scale: 1 }}
+                   className="bg-gradient-to-br from-primary to-indigo-600 p-8 rounded-[40px] shadow-2xl shadow-primary/30 relative overflow-hidden mb-8"
+                >
+                   <div className="absolute -right-4 -top-4 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
+                   <div className="relative z-10 flex flex-col items-center text-center space-y-4">
+                      <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md border border-white/30">
+                         <Zap className="text-white" size={32} />
+                      </div>
+                      <div>
+                         <h3 className="text-xl font-black text-white italic uppercase tracking-tighter">Your Path Starts Here</h3>
+                         <p className="text-[9px] text-white/80 font-black uppercase tracking-widest mt-2">Activate Level 1 to unlock global rewards</p>
+                      </div>
+                      <button 
+                         onClick={() => router.push(`/team-builder?tier=${activeTier}&level=1`)}
+                         className="px-10 py-4 bg-white text-primary rounded-[25px] font-black italic text-[10px] uppercase tracking-widest shadow-xl shadow-black/20 active:scale-95 transition-all"
+                      >
+                         Build Team Now
+                      </button>
+                   </div>
+                </motion.div>
+              )}
 
               {levels.map((lv, index) => {
                 const status = lv.is_completed ? 'completed' : 'in-progress';
@@ -193,8 +277,8 @@ export default function LevelsPage() {
                      </div>
                   </motion.div>
                 );
-             })}
-           </div>
+              })}
+            </div>
         </div>
       )}
 
@@ -205,5 +289,18 @@ export default function LevelsPage() {
           </p>
       </footer>
     </main>
+  );
+}
+
+export default function LevelsPage() {
+  return (
+    <Suspense fallback={
+       <div className="min-h-screen flex flex-col items-center justify-center space-y-4">
+          <Loader2 className="animate-spin text-primary" size={32} />
+          <p className="text-[10px] font-black text-text-dim uppercase tracking-widest italic">Syncing Path...</p>
+       </div>
+    }>
+       <LevelsContent />
+    </Suspense>
   );
 }

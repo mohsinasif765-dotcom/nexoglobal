@@ -6,7 +6,7 @@ import {
   Users, Copy, ArrowLeft, Loader2, 
   MapPin, CheckCircle2, ChevronRight,
   TrendingUp, Zap, Activity, ShieldCheck, Trophy,
-  Search, Filter, Info
+  Search, Filter, Info, MessageCircle, Lock, Plus, Ticket
 } from "lucide-react";
 import { createBrowserClient } from "@supabase/ssr";
 
@@ -26,6 +26,8 @@ function TeamBuilderContent() {
   const [nodes, setNodes] = useState<any[]>([]);
   const [availablePins, setAvailablePins] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isTierOwned, setIsTierOwned] = useState(true);
+  const [rootNode, setRootNode] = useState<any>(null);
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -62,6 +64,32 @@ function TeamBuilderContent() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // 1. Check Ownership & Get Root Node Info
+      const { data: stats } = await supabase.rpc('get_user_dashboard_stats', {
+        p_user_id: user.id
+      });
+
+      if (stats && stats.tree_stats) {
+        const owned = stats.tree_stats.map((t: any) => t.package_tier);
+        if (!owned.includes(activeTier)) {
+          setIsTierOwned(false);
+          setLoading(false);
+          return;
+        }
+
+        // Setup Root Node Info for Level 1 starts
+        const currentTierStats = stats.tree_stats.find((t: any) => t.package_tier === activeTier);
+        setRootNode({
+          user_id: user.id,
+          full_name: stats.full_name,
+          referral_code: stats.referral_code,
+          has_empty_left: currentTierStats?.left_count === 0,
+          has_empty_right: currentTierStats?.right_count === 0,
+        });
+      }
+      setIsTierOwned(true);
+
+      // 2. Fetch Nodes
       const { data, error } = await supabase.rpc('get_team_nodes_at_level', { 
         p_root_id: user.id,
         p_tier: activeTier,
@@ -88,7 +116,6 @@ function TeamBuilderContent() {
 
   return (
     <main className="min-h-screen bg-bg-app pb-32 transition-colors duration-300">
-      {/* Premium Header */}
       <header className="bg-bg-card/80 backdrop-blur-xl sticky top-0 z-40 border-b border-app pt-12 pb-6 px-6 transition-colors duration-300">
         <div className="flex items-center gap-4 mb-6">
             <button 
@@ -98,7 +125,7 @@ function TeamBuilderContent() {
                 <ArrowLeft size={20} />
             </button>
             <div>
-                <h1 className="text-xl font-black italic tracking-tighter text-text-app leading-none">TEAM BUILDER</h1>
+                <h1 className="text-xl font-black italic tracking-tighter text-text-app leading-none uppercase">TEAM BUILDER</h1>
                 <p className="text-[9px] font-black text-text-dim uppercase tracking-widest mt-1">Strategic Placement Optimizer</p>
             </div>
         </div>
@@ -133,11 +160,11 @@ function TeamBuilderContent() {
 
       {/* SEARCH BAR */}
       <div className="px-6 mt-6">
-          <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim" size={16} />
+          <div className="relative group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim group-focus-within:text-primary transition-all" size={16} />
               <input 
                 type="text"
-                placeholder="Search member by name or code..."
+                placeholder="Find teammate by name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-bg-card border border-app py-4 pl-12 pr-4 rounded-[25px] text-sm font-bold text-text-app shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-text-dim/50"
@@ -168,13 +195,34 @@ function TeamBuilderContent() {
           </div>
       </div>
 
+      {/* CONTENT AREA */}
       <div className="px-6 mt-8">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 space-y-4">
             <Loader2 className="animate-spin text-primary" size={32} />
             <p className="text-[10px] font-black text-text-dim uppercase tracking-widest italic leading-none">Scanning Structure...</p>
           </div>
-        ) : filteredNodes.length === 0 ? (
+        ) : !isTierOwned ? (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-bg-card border-2 border-dashed border-app p-12 rounded-[40px] text-center space-y-6"
+          >
+            <div className="w-20 h-20 bg-bg-app rounded-full flex items-center justify-center mx-auto text-text-dim border border-app shadow-inner">
+              <Lock size={36} />
+            </div>
+            <div>
+              <h3 className="text-xl font-black text-text-app italic uppercase tracking-tighter">Team Builder Locked</h3>
+              <p className="text-[10px] text-text-dim font-bold uppercase tracking-widest mt-1 max-w-[220px] mx-auto leading-relaxed">You must own the {activeTier} tier to optimize placement for your team in this protocol.</p>
+            </div>
+            <button 
+              onClick={() => window.open('https://t.me/nexoglobal_support')}
+              className="w-full py-4 bg-primary text-white rounded-2xl font-black text-[10px] uppercase italic tracking-widest shadow-xl shadow-primary/20 flex items-center justify-center gap-2 transition-all active:scale-95"
+            >
+              <MessageCircle size={16} /> Contact Admin to Upgrade
+            </button>
+          </motion.div>
+        ) : (filteredNodes.length === 0 && activeLevel !== 1) ? (
           <div className="bg-bg-card rounded-[40px] p-12 text-center border border-dashed border-app">
              <Users className="text-text-dim opacity-20 mx-auto mb-4" size={48} />
              <p className="text-xs font-black italic text-text-dim uppercase tracking-widest leading-relaxed">No members found at this level.</p>
@@ -182,6 +230,84 @@ function TeamBuilderContent() {
         ) : (
           <div className="space-y-4">
             <AnimatePresence>
+              {/* Root Node Starter Card */}
+              {activeLevel === 1 && rootNode && (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-gradient-to-br from-primary/10 to-indigo-500/5 p-6 rounded-[35px] border-2 border-primary/20 shadow-xl relative overflow-hidden mb-8"
+                >
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -mr-16 -mt-16 blur-xl" />
+                  <div className="flex justify-between items-center mb-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 bg-primary text-white rounded-[22px] flex items-center justify-center font-black text-xl shadow-lg ring-4 ring-primary/20">
+                        {rootNode.full_name.charAt(0)}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-black text-text-app text-xl italic uppercase tracking-tight">{rootNode.full_name}</h4>
+                          <span className="text-[8px] px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 rounded-full font-black uppercase">YOU</span>
+                        </div>
+                        <p className="text-[9px] font-black text-text-dim uppercase tracking-[0.2em] mt-1">Starting Node • Level 0</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                       <p className="text-[8px] font-black text-text-dim uppercase tracking-widest ml-2">Left Side</p>
+                       {rootNode.has_empty_left ? (
+                         availablePins.length > 0 ? (
+                            <button 
+                               onClick={() => router.push(`/registration?ref=${rootNode.referral_code}&placement=left&pin=${availablePins[0].pin_code}`)}
+                               className="w-full bg-emerald-500 text-white py-4 rounded-2xl font-black text-[9px] uppercase italic tracking-[0.2em] shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                            >
+                               <Plus size={14} /> Build Left
+                            </button>
+                         ) : (
+                            <button 
+                               onClick={() => router.push('/pins')}
+                               className="w-full bg-bg-app border-2 border-dashed border-app text-text-dim py-4 rounded-2xl font-black text-[9px] uppercase italic tracking-[0.2em] active:scale-95 transition-all flex items-center justify-center gap-2 hover:border-primary/50 hover:text-primary"
+                            >
+                               <Ticket size={14} /> Get {activeTier} PIN
+                            </button>
+                         )
+                       ) : (
+                         <div className="w-full bg-bg-app border border-app py-4 rounded-2xl flex items-center justify-center gap-2 opacity-50">
+                            <CheckCircle2 size={12} className="text-primary" />
+                            <span className="text-[8px] font-black uppercase text-text-dim">Left Full</span>
+                         </div>
+                       )}
+                    </div>
+                    <div className="space-y-2">
+                       <p className="text-[8px] font-black text-text-dim uppercase tracking-widest ml-2">Right Side</p>
+                       {rootNode.has_empty_right ? (
+                         availablePins.length > 0 ? (
+                            <button 
+                               onClick={() => router.push(`/registration?ref=${rootNode.referral_code}&placement=right&pin=${availablePins[0].pin_code}`)}
+                               className="w-full bg-primary text-white py-4 rounded-2xl font-black text-[9px] uppercase italic tracking-[0.2em] shadow-lg shadow-primary/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                            >
+                               <Plus size={14} /> Build Right
+                            </button>
+                         ) : (
+                            <button 
+                               onClick={() => router.push('/pins')}
+                               className="w-full bg-bg-app border-2 border-dashed border-app text-text-dim py-4 rounded-2xl font-black text-[9px] uppercase italic tracking-[0.2em] active:scale-95 transition-all flex items-center justify-center gap-2 hover:border-primary/50 hover:text-primary"
+                            >
+                               <Ticket size={14} /> Get {activeTier} PIN
+                            </button>
+                         )
+                       ) : (
+                         <div className="w-full bg-bg-app border border-app py-4 rounded-2xl flex items-center justify-center gap-2 opacity-50">
+                            <CheckCircle2 size={12} className="text-primary" />
+                            <span className="text-[8px] font-black uppercase text-text-dim">Right Full</span>
+                         </div>
+                       )}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
               {filteredNodes.map((node, idx) => (
                 <motion.div 
                     layout
@@ -214,12 +340,19 @@ function TeamBuilderContent() {
                             {node.has_empty_left ? (
                                 <div className="flex flex-col items-end gap-1">
                                     <span className="text-[7px] font-black uppercase bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded-lg tracking-widest border border-emerald-500/20">Left Empty 🟢</span>
-                                    {availablePins.length > 0 && (
+                                    {availablePins.length > 0 ? (
                                         <button 
                                             onClick={() => router.push(`/registration?ref=${node.referral_code}&placement=left&pin=${availablePins[0].pin_code}`)}
                                             className="text-[6px] font-black uppercase bg-primary text-white px-2 py-1 rounded-md shadow-sm active:scale-95 transition-all"
                                         >
                                             Build Now
+                                        </button>
+                                    ) : (
+                                        <button 
+                                            onClick={() => router.push('/pins')}
+                                            className="text-[6px] font-black uppercase bg-bg-app text-text-dim border border-app px-2 py-1 rounded-md active:scale-95 transition-all"
+                                        >
+                                            Get PIN
                                         </button>
                                     )}
                                 </div>
@@ -229,12 +362,19 @@ function TeamBuilderContent() {
                             {node.has_empty_right ? (
                                 <div className="flex flex-col items-end gap-1 mt-1">
                                     <span className="text-[7px] font-black uppercase bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded-lg tracking-widest border border-emerald-500/20">Right Empty 🟢</span>
-                                    {availablePins.length > 0 && (
+                                    {availablePins.length > 0 ? (
                                         <button 
                                             onClick={() => router.push(`/registration?ref=${node.referral_code}&placement=right&pin=${availablePins[0].pin_code}`)}
                                             className="text-[6px] font-black uppercase bg-primary text-white px-2 py-1 rounded-md shadow-sm active:scale-95 transition-all"
                                         >
                                             Build Now
+                                        </button>
+                                    ) : (
+                                        <button 
+                                            onClick={() => router.push('/pins')}
+                                            className="text-[6px] font-black uppercase bg-bg-app text-text-dim border border-app px-2 py-1 rounded-md active:scale-95 transition-all"
+                                        >
+                                            Get PIN
                                         </button>
                                     )}
                                 </div>

@@ -3,7 +3,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ChevronLeft, ShieldCheck, AlertCircle, Loader2, 
-  ZoomIn, ZoomOut, Maximize, UserPlus, PlusCircle, Move
+  ZoomIn, ZoomOut, Maximize, UserPlus, PlusCircle, Move,
+  Lock, MessageCircle
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
@@ -35,6 +36,7 @@ export default function MyTree() {
   const [treeData, setTreeData] = useState<TreeNodeData | null>(null);
   const [selectedNode, setSelectedNode] = useState<TreeNodeData | null>(null);
   const [zoom, setZoom] = useState(0.7);
+  const [isTierOwned, setIsTierOwned] = useState(true);
 
   const handleZoom = (type: "in" | "out" | "reset") => {
     if (type === "in") setZoom(prev => Math.min(prev + 0.2, 2));
@@ -94,6 +96,25 @@ export default function MyTree() {
     }
 
     try {
+      // 1. Check Ownership
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: stats } = await supabase.rpc('get_user_dashboard_stats', {
+        p_user_id: user.id
+      });
+
+      if (stats && stats.tree_stats) {
+        const owned = stats.tree_stats.map((t: any) => t.package_tier);
+        if (!owned.includes(tier)) {
+          setIsTierOwned(false);
+          setLoading(false);
+          return;
+        }
+      }
+      setIsTierOwned(true);
+
+      // 2. Fetch Tree Data
       const { data: flatList, error } = await supabase.rpc('get_binary_tree_pro', {
         root_id: userId,
         p_tier: tier
@@ -170,6 +191,28 @@ export default function MyTree() {
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-bg-app/80 backdrop-blur-sm z-30">
             <Loader2 className="animate-spin text-primary" size={44} />
             <p className="text-[10px] font-black text-text-dim mt-5 uppercase tracking-widest italic">Syncing Tree Data...</p>
+          </div>
+        ) : !isTierOwned ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-10 text-center bg-bg-app z-40">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-bg-card border-2 border-dashed border-app p-12 rounded-[50px] space-y-8 shadow-2xl max-w-sm mx-auto"
+            >
+              <div className="w-24 h-24 bg-bg-app rounded-full flex items-center justify-center mx-auto text-text-dim border border-app shadow-inner">
+                <Lock size={44} />
+              </div>
+              <div>
+                <h3 className="text-2xl font-black text-text-app italic uppercase tracking-tighter">Visualizer Locked</h3>
+                <p className="text-[10px] text-text-dim font-bold uppercase tracking-widest mt-2 px-4 leading-relaxed">Join the {selectedTier} protocol to visualize your binary network and track global growth.</p>
+              </div>
+              <button 
+                onClick={() => window.open('https://t.me/nexoglobal_support')}
+                className="w-full py-5 bg-primary text-white rounded-[30px] font-black italic text-xs uppercase tracking-widest shadow-2xl shadow-primary/20 flex items-center justify-center gap-2 transition-all active:scale-95"
+              >
+                <MessageCircle size={20} /> Contact Admin to Upgrade
+              </button>
+            </motion.div>
           </div>
         ) : !treeData ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center">
