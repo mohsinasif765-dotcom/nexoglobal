@@ -1,36 +1,120 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Nexo Global MLM Ecosystem
 
-## Getting Started
+![Nexo Global Logo](app/logo.png)
 
-First, run the development server:
+Nexo Global is a state-of-the-art Multi-Level Marketing (MLM) platform built with **Next.js 16**, **Supabase**, and **Tailwind CSS 4**. It features a sophisticated binary tree engine, multiple investment tiers, and an automated commission system.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Core Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 👤 User Features
+- **Tiered Investment Model**: Four distinct packages:
+  - **Starter**: $2
+  - **Plus**: $5
+  - **Pro**: $10
+  - **Elite**: $20
+- **Binary Tree Engine**: Automated placement in a left/right binary structure for each tier.
+- **PIN Activation System**: Secure account activation and upgrades using unique PIN codes.
+- **Dynamic Dashboard**: Real-time stats for wallet balance, total earnings, and tree growth.
+- **Multiple Payment Gateways**:
+  - **OxApay**: Automatic crypto payments.
+  - **Web3 Wallet**: Direct blockchain interaction.
+  - **Manual**: Offline transaction verification.
+- **Reward Systems**:
+  - **Binary Pair Matching**: 5% bonus on every balanced pair in the tree.
+  - **Level Rewards**: Instant bonuses for completing specific tree depths.
+- **Financial Module**: Secure USDT-BEP20 withdrawals and internal wallet transfers.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 🛠️ Admin Suite
+- **Comprehensive Analytics**: Monitor total volume, user growth, and pending payouts.
+- **User Management**: Activate, block, or manage user roles and balances.
+- **Financial Control**: 
+  - Approve/Reject PIN requests.
+  - Manage pending withdrawals.
+  - Override system-wide pricing and limits.
+- **Network Overview**: Full visibility into the binary tree across all tiers.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 🛠️ Tech Stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Frontend**: 
+  - [Next.js 16](https://nextjs.org/) (App Router)
+  - [React 19](https://react.dev/)
+  - [Tailwind CSS 4](https://tailwindcss.com/)
+  - [Framer Motion](https://www.framer.com/motion/) (Smooth Transitions & Animations)
+  - [Lucide React](https://lucide.dev/) (Iconography)
+- **Backend & Database**:
+  - [Supabase](https://supabase.com/) (PostgreSQL + RLS)
+  - [Edge Functions](https://supabase.com/docs/guides/functions) (OxApay Integration)
+- **Web3 Integration**:
+  - [Wagmi](https://wagmi.sh/) / [Viem](https://viem.sh/)
+  - [ConnectKit](https://docs.family.co/connectkit)
+- **State Management**:
+  - [TanStack Query](https://tanstack.com/query/latest) (v5)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 📊 Database Architecture
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The system relies on a robust PostgreSQL schema defined in `unified_setup.sql`:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Key Tables
+- `profiles`: Core user data, wallet balances, and referral codes.
+- `tree_positions`: Manages the binary tree structure per package tier.
+- `pins`: Stores activation codes generated via purchases or admin.
+- `commissions`: Detailed logs of earned bonuses (pair matched, level up).
+- `withdraw_requests`: Status tracking for USDT-BEP20 payouts.
+- `system_settings`: Key-value store for global configs (min withdraw, package prices).
+
+### Logic Layer (PL/pgSQL Functions)
+- `find_automatic_parent`: Intelligent logic to find the next available spot in the binary tree.
+- `process_binary_pair_matching`: Automatically calculates and credits bonuses when a pair matches.
+- `update_tree_counts`: Recursively updates parent node counts and triggers level rewards.
+- `buy_pin_with_balance`: Enables internal reinvestment using wallet funds.
+
+---
+
+## ⚙️ Initial Setup
+
+### Pre-requisites
+- Node.js 20+
+- Supabase Project
+
+### Installation
+1. Clone the repository:
+   ```bash
+   git clone [repository-url]
+   cd dream-mlm
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Configure Environment Variables (`.env.local`):
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_project_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+   OXAPAY_MERCHANT_KEY=your_oxapay_key
+   ADMIN_WALLET_ADDRESS=0x...
+   NEXT_PUBLIC_WALLETCONNECT_ID=your_id
+   ```
+4. Run Database Setup:
+   - Execute the contents of `unified_setup.sql` in your Supabase SQL Editor.
+5. Start development:
+   ```bash
+   npm run dev
+   ```
+
+---
+
+## 🔒 Security & Performance
+- **Row Level Security (RLS)**: Every table is hardened with Supabase RLS policies to ensure users only access their own data.
+- **Optimistic UI**: Use of TanStack Query for seamless, fast-feeling interactions.
+- **Server Actions**: Secure, server-side data mutations.
+
+---
+
+## 📄 License
+This project is private and intended for use by Life Dreams PK / Nexo Global.

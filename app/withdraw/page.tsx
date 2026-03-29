@@ -7,7 +7,9 @@ import {
   CreditCard, 
   Loader2, 
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  ShieldCheck,
+  Zap
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
@@ -26,7 +28,7 @@ export default function WithdrawPage() {
   
   // Form State
   const [amount, setAmount] = useState("");
-  const [method, setMethod] = useState("usdt");
+  const [method, setMethod] = useState("binance_pay");
   const [accNumber, setAccNumber] = useState("");
   const [accTitle, setAccTitle] = useState("");
 
@@ -51,7 +53,12 @@ export default function WithdrawPage() {
   // Validation Logic
   const numAmount = parseFloat(amount) || 0;
   const isOverBalance = numAmount > balance;
-  const isValid = numAmount >= 5 && !isOverBalance && accNumber.length > 20 && accTitle.length > 2;
+  
+  const isValid = 
+    numAmount >= 10 && 
+    !isOverBalance && 
+    (method === 'binance_pay' ? accNumber.length >= 8 : accNumber.length >= 40) && 
+    accTitle.length > 2;
 
   const handleWithdraw = async () => {
     if (!isValid) return;
@@ -147,13 +154,20 @@ export default function WithdrawPage() {
 
         {/* 3. METHOD SELECTION */}
         <div>
-          <h3 className="text-sm font-bold text-gray-800 mb-3 ml-1">Select Method</h3>
-          <div className="grid grid-cols-1 gap-3">
+          <h3 className="text-sm font-bold text-gray-800 mb-3 ml-1 text-white uppercase italic tracking-tighter">Choose Payment Route</h3>
+          <div className="grid grid-cols-2 gap-3">
             <MethodCard 
-              name="USDT Wallet (TRC20)" 
-              icon={<Wallet className="text-emerald-500" />} 
-              selected={method === 'usdt'} 
-              onClick={() => setMethod('usdt')}
+              name="Binance Pay" 
+              badge="0% FEE"
+              icon={<ShieldCheck className="text-purple-500" />} 
+              selected={method === 'binance_pay'} 
+              onClick={() => { setMethod('binance_pay'); setAccNumber(''); }}
+            />
+            <MethodCard 
+              name="BNB 20 (BEP20)" 
+              icon={<Zap className="text-orange-500" />} 
+              selected={method === 'bnb_20'} 
+              onClick={() => { setMethod('bnb_20'); setAccNumber(''); }}
             />
           </div>
         </div>
@@ -165,13 +179,15 @@ export default function WithdrawPage() {
                <CreditCard size={20} />
              </div>
              <div className="flex-1">
-               <label className="text-[10px] font-bold text-gray-400 uppercase">Wallet Address</label>
+               <label className="text-[10px] font-black text-gray-400 uppercase italic">
+                 {method === 'binance_pay' ? 'Binance Pay ID' : 'BEP20 Wallet Address'}
+               </label>
                <input 
                  type="text" 
-                 placeholder="Enter TRC20 Address"
+                 placeholder={method === 'binance_pay' ? "Enter 9-digit Binance ID" : "0x... (USDT-BEP20 Address)"}
                  value={accNumber}
                  onChange={(e) => setAccNumber(e.target.value)}
-                 className="w-full font-semibold text-gray-700 outline-none bg-transparent"
+                 className="w-full font-black text-gray-700 outline-none bg-transparent placeholder:text-gray-200"
                />
              </div>
           </div>
@@ -212,18 +228,23 @@ export default function WithdrawPage() {
   );
 }
 
-function MethodCard({ name, icon, selected, onClick }: any) {
+function MethodCard({ name, icon, selected, onClick, badge }: any) {
   return (
     <div 
       onClick={onClick}
-      className={`p-4 rounded-2xl border-2 cursor-pointer flex items-center gap-4 transition-all duration-300
+      className={`p-4 rounded-3xl border-2 cursor-pointer flex flex-col items-center gap-2 transition-all duration-300 relative overflow-hidden
         ${selected ? 'border-primary bg-primary/5' : 'border-gray-100 bg-white hover:border-gray-200'}
       `}
     >
-      <div className={`p-2 rounded-xl ${selected ? 'bg-white shadow-sm' : 'bg-gray-50'}`}>
+      {badge && (
+        <div className="absolute top-0 right-0 bg-primary text-white text-[8px] font-black px-2 py-1 rounded-bl-xl uppercase tracking-tighter italic">
+          {badge}
+        </div>
+      )}
+      <div className={`p-4 rounded-2xl ${selected ? 'bg-white shadow-sm' : 'bg-gray-50'}`}>
         {icon}
       </div>
-      <span className={`text-sm font-bold ${selected ? 'text-primary' : 'text-gray-600'}`}>
+      <span className={`text-[10px] font-black uppercase text-center tracking-tighter ${selected ? 'text-primary' : 'text-gray-400'}`}>
         {name}
       </span>
     </div>

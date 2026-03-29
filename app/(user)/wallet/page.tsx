@@ -518,6 +518,22 @@ export default function WalletPage() {
                               </div>
                               <ChevronRight size={18} />
                            </button>
+
+                           <button
+                              onClick={() => router.push('/deposit')}
+                              className="w-full bg-purple-600 text-white p-5 rounded-[24px] flex items-center justify-between active:scale-[0.98] transition-all border border-white/10 shadow-lg shadow-purple-500/10"
+                           >
+                              <div className="flex items-center gap-4">
+                                 <div className="w-11 h-11 bg-white/10 rounded-xl flex items-center justify-center text-white">
+                                    <QrCode size={20} />
+                                 </div>
+                                 <div className="text-left">
+                                    <p className="font-black tracking-widest italic uppercase text-[10px]">Manual Binance Pay</p>
+                                    <p className="text-[7px] font-bold text-white/40 uppercase tracking-[0.2em]">QR Code & ID Support</p>
+                                 </div>
+                              </div>
+                              <ChevronRight size={18} />
+                           </button>
                         </div>
                      </div>
                   </motion.div>

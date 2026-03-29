@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Settings, Users, Banknote } from "lucide-react";
+import { LayoutDashboard, Settings, Users, Banknote, Ticket } from "lucide-react";
 
 export default function AdminNav() {
   const pathname = usePathname();
@@ -26,12 +26,19 @@ export default function AdminNav() {
         active={isActive('/admin/settings')} 
       />
 
-      {/* 3. USER MANAGEMENT */}
       <NavLink 
         href="/admin/users" 
         icon={<Users size={20} />} 
         label="Users" 
         active={isActive('/admin/users')} 
+      />
+
+      {/* 4. DEPOSIT REQUESTS / PINS */}
+      <NavLink 
+        href="/admin/pins" 
+        icon={<Ticket size={20} />} 
+        label="Deposits" 
+        active={isActive('/admin/pins')} 
       />
 
       {/* 4. PAYOUTS */}

@@ -4,7 +4,7 @@ import {
   Settings, Save, Zap, TrendingUp, ShieldCheck, 
   Trophy, Globe, Lock, DollarSign, Percent,
   Layers, Wallet, ArrowLeft, Loader2, CheckCircle2,
-  Clock, ShieldAlert
+  Clock, ShieldAlert, Upload, Image, Trash2, X
 } from "lucide-react";
 import { createBrowserClient } from "@supabase/ssr";
 import { useRouter } from "next/navigation";
@@ -14,6 +14,7 @@ export default function AdminSettings() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [settings, setSettings] = useState<any>({});
 
   const supabase = createBrowserClient(
@@ -63,6 +64,40 @@ export default function AdminSettings() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleQrUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `qr-code-${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('binance-assets')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('binance-assets')
+        .getPublicUrl(filePath);
+
+      handleUpdate('admin_binance_qr_url', publicUrl);
+      alert("QR Code uploaded! Don't forget to save settings.");
+    } catch (error: any) {
+      alert("Upload error: " + error.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeleteQr = async () => {
+    if (!confirm("Are you sure you want to remove the QR Code?")) return;
+    handleUpdate('admin_binance_qr_url', '');
   };
 
   if (loading) return (
@@ -182,25 +217,89 @@ export default function AdminSettings() {
             </div>
          </section>
 
-        <section className="space-y-4">
-           <div className="flex items-center gap-3 ml-2">
-              <Globe size={18} className="text-primary" />
-              <h3 className="text-xs font-black text-app-dim uppercase tracking-[0.2em]">Global Metrics</h3>
-           </div>
-           <div className="grid grid-cols-1 gap-4">
-              <SettingInput 
-                label="Minimum Withdrawal (USDT)" value={settings.min_withdraw} 
-                onChange={(v: string) => handleUpdate('min_withdraw', v)}
-                icon={<Wallet size={16} />}
-              />
-           </div>
-        </section>
+         <section className="space-y-4">
+            <div className="flex items-center gap-3 ml-2">
+               <Globe size={18} className="text-primary" />
+               <h3 className="text-xs font-black text-app-dim uppercase tracking-[0.2em]">Global Metrics</h3>
+            </div>
+            <div className="grid grid-cols-1 gap-4">
+               <SettingInput 
+                 label="Minimum Withdrawal (USDT)" value={settings.min_withdraw} 
+                 onChange={(v: string) => handleUpdate('min_withdraw', v)}
+                 icon={<Wallet size={16} />}
+               />
+            </div>
+         </section>
+
+         {/* BINANCE CONFIGURATION SECTION */}
+         <section className="space-y-4">
+            <div className="flex items-center gap-3 ml-2">
+               <ShieldCheck size={18} className="text-purple-600" />
+               <h3 className="text-xs font-black text-app-dim uppercase tracking-[0.2em]">Binance Pay Assets</h3>
+            </div>
+            <div className="bg-app-card border border-app-border p-6 rounded-[35px] shadow-sm space-y-6">
+               <div className="grid grid-cols-2 gap-4">
+                  <SettingInput 
+                    label="Binance Pay ID" value={settings.admin_binance_id} 
+                    onChange={(v: string) => handleUpdate('admin_binance_id', v)}
+                    icon={<Lock size={16} />}
+                    isText
+                  />
+                  <SettingInput 
+                    label="Receiver Name" value={settings.admin_binance_name} 
+                    onChange={(v: string) => handleUpdate('admin_binance_name', v)}
+                    icon={<Settings size={16} />}
+                    isText
+                  />
+               </div>
+
+               <div className="space-y-3">
+                  <label className="text-[10px] font-black italic text-app-dim uppercase tracking-widest pl-2">Binance QR Code</label>
+                  <div className="flex items-center gap-4 p-4 bg-app-bg rounded-2xl border border-app-border">
+                     {settings.admin_binance_qr_url ? (
+                        <div className="relative group">
+                           <img 
+                              src={settings.admin_binance_qr_url} 
+                              alt="QR Preview" 
+                              className="w-16 h-16 object-cover rounded-xl border border-app-border"
+                           />
+                           <button 
+                              onClick={handleDeleteQr}
+                              className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                           >
+                              <X size={12} />
+                           </button>
+                        </div>
+                     ) : (
+                        <div className="w-16 h-16 bg-white/5 rounded-xl border border-dashed border-app-border flex items-center justify-center text-app-dim/50">
+                           <Image size={24} />
+                        </div>
+                     )}
+                     
+                     <div className="flex-1">
+                        <label className="cursor-pointer bg-white/5 hover:bg-white/10 text-app-text px-4 py-3 rounded-xl border border-app-border flex items-center justify-center gap-2 transition-all">
+                           {uploading ? <Loader2 className="animate-spin" size={16} /> : <Upload size={16} />}
+                           <span className="text-[10px] font-black uppercase tracking-widest">
+                              {settings.admin_binance_qr_url ? 'Replace QR Code' : 'Upload QR Code'}
+                           </span>
+                           <input 
+                              type="file" 
+                              accept="image/*"
+                              onChange={handleQrUpload}
+                              className="hidden"
+                           />
+                        </label>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </section>
       </div>
     </div>
   );
 }
 
-function SettingInput({ label, value, onChange, icon, percentage }: any) {
+function SettingInput({ label, value, onChange, icon, percentage, isText }: any) {
   return (
     <div className="bg-app-card border border-app-border p-5 rounded-[30px] shadow-sm transition-all active:scale-95 group">
       <div className="flex items-center gap-2 mb-3">
@@ -209,15 +308,17 @@ function SettingInput({ label, value, onChange, icon, percentage }: any) {
       </div>
       <div className="relative">
         <input 
-          type="number"
+          type={isText ? "text" : "number"}
           value={value || ""}
           onChange={(e) => onChange(e.target.value)}
           className="w-full bg-app-bg border border-app-border p-3.5 rounded-2xl text-sm font-black italic outline-none focus:ring-2 focus:ring-primary transition-all pr-12 text-app-text placeholder:text-app-dim/30"
-          placeholder="0.00"
+          placeholder={isText ? "Enter value..." : "0.00"}
         />
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-app-dim/50">
-           {percentage ? '%' : 'USDT'}
-        </div>
+        {!isText && (
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-app-dim/50">
+             {percentage ? '%' : 'USDT'}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -120,12 +120,12 @@ export default function AdminPinRequests() {
                       req.status === 'approved' ? 'bg-emerald-100 text-emerald-600' : 
                       req.status === 'rejected' ? 'bg-red-100 text-red-600' : 'bg-primary text-white'
                     }`}>
-                      {req.amount / 5000} PINs • {req.status}
+                      {req.payment_gateway?.replace('_', ' ')} • {req.status}
                     </span>
                     <h3 className="text-xl font-black text-gray-800 tracking-tight mt-2">{req.full_name}</h3>
                     <p className="text-xs text-gray-400 font-bold">{req.phone}</p>
                   </div>
-                  <p className="text-xl font-black text-primary tracking-tighter italic">Rs {req.amount.toLocaleString()}</p>
+                  <p className="text-xl font-black text-primary tracking-tighter italic">${req.amount.toLocaleString()} USDT</p>
                 </div>
 
                 <div className="bg-bg-light p-4 rounded-2xl mb-6 border border-gray-100 flex justify-between items-center">

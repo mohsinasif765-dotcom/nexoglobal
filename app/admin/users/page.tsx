@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 // 1. SSR compatible client import kiya
 import { createBrowserClient } from "@supabase/ssr"; 
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, UserX, UserCheck, ShieldAlert, Phone, Loader2, X, Clock, Ban } from "lucide-react";
+import { Search, UserX, UserCheck, ShieldAlert, Phone, Loader2, X, Clock, Ban, TrendingUp } from "lucide-react";
 
 export default function UserManagement() {
   // 2. Client ko component ke andar initialize kiya taake cookies update hon
@@ -20,6 +20,9 @@ export default function UserManagement() {
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [confirmToggle, setConfirmToggle] = useState<{id: string, currentStatus: string, action: string} | null>(null);
+  const [upgradeUser, setUpgradeUser] = useState<any | null>(null);
+  const [selectedTier, setSelectedTier] = useState("starter");
+  const [upgrading, setUpgrading] = useState(false);
 
   const LIMIT = 10;
 
@@ -81,6 +84,31 @@ export default function UserManagement() {
       alert(`User marked as ${newStatus}`);
     } catch (e: any) {
       alert("Update Failed: " + e.message);
+    }
+  };
+
+  const handleAdminUpgrade = async () => {
+    if (!upgradeUser) return;
+    setUpgrading(true);
+    try {
+      const { data, error } = await supabase.rpc('admin_assign_tier_v2', {
+        p_user_id: upgradeUser.id,
+        p_tier: selectedTier
+      });
+
+      if (error) throw error;
+      
+      if (data.success) {
+        alert(data.message);
+        setUpgradeUser(null);
+        fetchUsers(0, search, true, activeTab);
+      } else {
+        alert("Alert: " + data.message);
+      }
+    } catch (e: any) {
+      alert("Upgrade Failed: " + e.message);
+    } finally {
+      setUpgrading(false);
     }
   };
 
@@ -155,6 +183,13 @@ export default function UserManagement() {
                          {activeTab === 'blocked' && (
                            <button onClick={() => handleUpdateStatus(user.id, 'active')} className="p-2 bg-blue-50 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition-all"><UserCheck size={16} /></button>
                          )}
+                         <button 
+                           onClick={() => setUpgradeUser(user)} 
+                           className="p-2 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-600 hover:text-white transition-all"
+                           title="Assign Plan"
+                         >
+                           <TrendingUp size={16} />
+                         </button>
                       </div>
                     </div>
 
@@ -183,6 +218,56 @@ export default function UserManagement() {
           </>
         )}
       </div>
+      {/* UPGRADE MODAL */}
+      <AnimatePresence>
+        {upgradeUser && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white w-full max-w-sm rounded-[40px] p-8 border border-white/20 shadow-2xl"
+            >
+              <h3 className="text-xl font-black italic tracking-tighter text-gray-900 uppercase mb-2">Assign Plan</h3>
+              <p className="text-gray-400 font-bold text-[10px] uppercase tracking-widest mb-6">User: {upgradeUser.full_name}</p>
+              
+              <div className="space-y-3 mb-8">
+                {['starter', 'plus', 'pro', 'elite'].map((tier) => (
+                  <button
+                    key={tier}
+                    onClick={() => setSelectedTier(tier)}
+                    className={`w-full p-4 rounded-2xl flex justify-between items-center transition-all border-2 ${
+                      selectedTier === tier 
+                      ? 'bg-purple-50 border-purple-600 text-purple-700' 
+                      : 'bg-gray-50 border-transparent text-gray-400 hover:bg-gray-100'
+                    }`}
+                  >
+                    <span className="font-black uppercase text-xs italic">{tier}</span>
+                    {selectedTier === tier && <div className="w-2 h-2 rounded-full bg-purple-600" />}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setUpgradeUser(null)}
+                  disabled={upgrading}
+                  className="flex-1 py-4 font-black text-[10px] uppercase tracking-widest text-gray-400 hover:bg-gray-50 rounded-2xl transition-all"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleAdminUpgrade}
+                  disabled={upgrading}
+                  className="flex-1 py-4 bg-primary text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
+                >
+                  {upgrading ? <Loader2 className="animate-spin" size={14} /> : "ASSIGN PLAN"}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
