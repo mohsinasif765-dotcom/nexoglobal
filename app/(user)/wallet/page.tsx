@@ -52,6 +52,8 @@ export default function WalletPage() {
    const [depositAmount, setDepositAmount] = useState("");
    const [txHash, setTxHash] = useState("");
    const [withdrawAddress, setWithdrawAddress] = useState("");
+   const [withdrawMethod, setWithdrawMethod] = useState("binance_pay");
+   const [accTitle, setAccTitle] = useState("");
    const [tier, setTier] = useState("starter");
    const [settings, setSettings] = useState<any>({});
    const [copied, setCopied] = useState(false);
@@ -257,23 +259,36 @@ export default function WalletPage() {
          return alert("Insufficient balance");
       }
 
+      // Binance Pay ID check (8+ chars) or BEP20 check (40+ chars)
+      const isMethodValid = withdrawMethod === 'binance_pay' ? withdrawAddress.length >= 8 : withdrawAddress.length >= 40;
+      if (!isMethodValid) {
+         return alert(withdrawMethod === 'binance_pay' ? "Invalid Binance ID length" : "Invalid BEP20 Address length");
+      }
+      
+      if (withdrawMethod === 'binance_pay' && accTitle.length < 2) {
+         return alert("Please enter your Binance Name for verification");
+      }
+
       try {
+         const feePercent = withdrawMethod === 'binance_pay' ? 0 : 0.1;
+         const fee = amountVal * feePercent;
+         const net = amountVal - fee;
+
          const { data, error } = await supabase.rpc('process_withdrawal', {
             p_user_id: user.id,
             p_amount: amountVal,
-            p_method: 'USDT-BEP20',
+            p_method: withdrawMethod,
             p_acc_number: withdrawAddress,
-            p_acc_title: 'USDT Wallet'
+            p_acc_title: withdrawMethod === 'binance_pay' ? accTitle : 'USDT BEP20'
          });
 
-         const fee = amountVal * 0.1;
-         const net = amountVal - fee;
+         if (error) throw error;
 
-         alert(`Payout Request for $${net.toFixed(2)} (after $${fee.toFixed(2)} fee) submitted successfully! ✨\nOur team will review and process your request within 24 hours.`);
+         alert(`Payout Request for $${net.toFixed(2)} (${withdrawMethod.replace('_', ' ').toUpperCase()}) submitted successfully! ✨\nOur team will review and process your request within 24 hours.`);
          setModal(null);
          fetchData();
       } catch (e: any) {
-         alert(e.message);
+         alert("Withdraw failed: " + e.message);
       }
    };
 
@@ -553,38 +568,80 @@ export default function WalletPage() {
 
                      <div className="space-y-4">
                         <div className="space-y-2">
-                           <label className="text-[8px] font-black text-text-dim uppercase tracking-[0.2em] italic ml-2">Withdrawal Amount ($)</label>
+                           <label className="text-[8px] font-black text-text-dim uppercase tracking-[0.2em] italic ml-2">Pledge Amount ($)</label>
                            <input
                               type="number" placeholder="Min. $10" value={amount} onChange={(e) => setAmount(e.target.value)}
                               className="w-full px-5 py-4 bg-bg-app border border-app rounded-2xl outline-none font-black text-lg tracking-tighter text-text-app focus:bg-bg-card focus:border-rose-500 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                            />
                         </div>
 
-                        {/* Payout Summary Calculation */}
+                        {/* Payout Routes */}
+                        <div className="grid grid-cols-2 gap-2">
+                           <button 
+                              onClick={() => setWithdrawMethod('binance_pay')}
+                              className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-1 transition-all relative overflow-hidden ${withdrawMethod === 'binance_pay' ? 'border-primary bg-primary/5 text-primary' : 'border-app bg-bg-app text-text-dim'}`}
+                           >
+                              {withdrawMethod === 'binance_pay' && <div className="absolute top-0 right-0 bg-primary text-white text-[6px] font-black px-1.5 py-0.5 rounded-bl-lg">0% FEE</div>}
+                              <ShieldCheck size={16} />
+                              <span className="text-[7px] font-black uppercase tracking-widest">Binance Pay</span>
+                           </button>
+                           <button 
+                              onClick={() => setWithdrawMethod('bnb_20')}
+                              className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-1 transition-all ${withdrawMethod === 'bnb_20' ? 'border-emerald-500 bg-emerald-500/5 text-emerald-500' : 'border-app bg-bg-app text-text-dim'}`}
+                           >
+                              <Zap size={16} />
+                              <span className="text-[7px] font-black uppercase tracking-widest">BNB 20</span>
+                           </button>
+                        </div>
+
+                        {/* Fees Summary */}
                         {parseFloat(amount) >= 10 && (
                            <motion.div 
                              initial={{ opacity: 0, scale: 0.95 }}
                              animate={{ opacity: 1, scale: 1 }}
-                             className="p-5 bg-rose-500/5 border border-rose-500/10 rounded-2xl space-y-3"
+                             className={`p-4 rounded-2xl border flex justify-between items-center ${withdrawMethod === 'binance_pay' ? 'bg-primary/5 border-primary/10' : 'bg-rose-500/5 border-rose-500/10'}`}
                            >
-                              <div className="flex justify-between items-center text-[10px] font-bold text-text-dim uppercase tracking-wider">
-                                 <span>Service Fee (10%)</span>
-                                 <span className="text-rose-500">-${(parseFloat(amount) * 0.1).toFixed(2)}</span>
+                              <div className="space-y-0.5">
+                                 <p className="text-[7px] font-black uppercase tracking-widest text-text-dim">Service Fee ({withdrawMethod === 'binance_pay' ? '0%' : '10%'})</p>
+                                 <p className="text-xs font-black italic text-text-app uppercase">Net Payout</p>
                               </div>
-                              <div className="h-[1px] bg-rose-500/10" />
-                              <div className="flex justify-between items-center text-[11px] font-black text-text-app uppercase tracking-tighter">
-                                 <span className="italic">Net Payout to Wallet</span>
-                                 <span className="text-xl text-emerald-500">${(parseFloat(amount) * 0.9).toFixed(2)}</span>
+                              <div className="text-right">
+                                 <p className={`text-[10px] font-black ${withdrawMethod === 'binance_pay' ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                    {withdrawMethod === 'binance_pay' ? '$0.00' : `-$${(parseFloat(amount) * 0.1).toFixed(2)}`}
+                                 </p>
+                                 <p className="text-lg font-black italic tracking-tighter text-text-app">
+                                    ${(parseFloat(amount) * (withdrawMethod === 'binance_pay' ? 1 : 0.9)).toFixed(2)}
+                                 </p>
                               </div>
                            </motion.div>
                         )}
                         
-                        <div className="space-y-2 pt-2">
-                           <label className="text-[8px] font-black text-text-dim uppercase tracking-[0.2em] italic ml-2">USDT Address (BEP20)</label>
-                           <input
-                              type="text" placeholder="0x..." value={withdrawAddress} onChange={(e) => setWithdrawAddress(e.target.value)}
-                              className="w-full px-5 py-4 bg-bg-app border border-app rounded-2xl outline-none font-mono text-[9px] tracking-widest text-text-app focus:bg-bg-card focus:border-rose-500 transition-all font-bold"
-                           />
+                        <div className="space-y-4 pt-2">
+                           <div className="space-y-1.5">
+                              <label className="text-[8px] font-black text-text-dim uppercase tracking-[0.2em] italic ml-2">
+                                 {withdrawMethod === 'binance_pay' ? 'Receiving Binance ID' : 'BEP20 Wallet Address'}
+                              </label>
+                              <input
+                                 type="text" 
+                                 placeholder={withdrawMethod === 'binance_pay' ? "Enter 9-digit Binance ID" : "0x... (USDT-BEP20)"}
+                                 value={withdrawAddress} 
+                                 onChange={(e) => setWithdrawAddress(e.target.value)}
+                                 className="w-full px-5 py-3.5 bg-bg-app border border-app rounded-2xl outline-none font-mono text-[10px] tracking-widest text-text-app focus:border-primary transition-all font-bold"
+                              />
+                           </div>
+
+                           {withdrawMethod === 'binance_pay' && (
+                              <div className="space-y-1.5">
+                                 <label className="text-[8px] font-black text-text-dim uppercase tracking-[0.2em] italic ml-2">Your Binance Name</label>
+                                 <input
+                                    type="text" 
+                                    placeholder="Enter Account Title"
+                                    value={accTitle} 
+                                    onChange={(e) => setAccTitle(e.target.value)}
+                                    className="w-full px-5 py-3.5 bg-bg-app border border-app rounded-2xl outline-none font-black italic text-xs tracking-tight text-text-app focus:border-primary transition-all"
+                                 />
+                              </div>
+                           )}
                         </div>
                      </div>
                      <button

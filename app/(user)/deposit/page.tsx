@@ -34,6 +34,7 @@ export default function DepositPage() {
   // Form State
   const [amount, setAmount] = useState("");
   const [trxId, setTrxId] = useState("");
+  const [senderName, setSenderName] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -81,6 +82,7 @@ export default function DepositPage() {
         amount: parseFloat(amount),
         trx_id: trxId,
         payment_gateway: 'binance_pay',
+        tx_hash: senderName, // Using tx_hash to store the sender's name/ID
         status: 'pending'
       });
 
@@ -186,6 +188,20 @@ export default function DepositPage() {
           </div>
 
           <div className="bg-bg-card p-5 rounded-[32px] border border-app shadow-sm">
+              <label className="text-[10px] font-black uppercase text-text-dim tracking-widest block mb-2 px-2">Your Binance Name/ID</label>
+              <div className="bg-bg-app rounded-2xl p-4 flex items-center gap-3 border border-app">
+                  <ShieldCheck size={20} className="text-primary" />
+                  <input 
+                    type="text" 
+                    placeholder="Enter your Binance Name"
+                    value={senderName}
+                    onChange={(e) => setSenderName(e.target.value)}
+                    className="flex-1 bg-transparent font-black italic text-lg outline-none text-text-app placeholder:text-text-dim/30"
+                  />
+              </div>
+          </div>
+
+          <div className="bg-bg-card p-5 rounded-[32px] border border-app shadow-sm">
               <label className="text-[10px] font-black uppercase text-text-dim tracking-widest block mb-2 px-2">Transaction ID (TRX ID)</label>
               <div className="bg-bg-app rounded-2xl p-4 flex items-center gap-3 border border-app">
                   <Zap size={20} className="text-orange-500" />
@@ -201,7 +217,7 @@ export default function DepositPage() {
 
           <button 
             onClick={handleSubmitRequest}
-            disabled={submitting || !amount || !trxId}
+            disabled={submitting || !amount || !trxId || !senderName}
             className="w-full py-6 bg-primary text-white rounded-[32px] font-black italic text-xs uppercase tracking-widest shadow-xl shadow-primary/20 active:scale-95 transition-all disabled:opacity-30 flex items-center justify-center gap-3"
           >
             {submitting ? <Loader2 className="animate-spin" /> : <>Submitting Proof <Send size={16} /></>}
